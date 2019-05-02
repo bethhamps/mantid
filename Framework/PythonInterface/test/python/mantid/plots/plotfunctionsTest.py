@@ -8,6 +8,7 @@ from __future__ import (absolute_import, division, print_function)
 
 import numpy as np
 import matplotlib
+
 matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 import unittest
@@ -30,10 +31,19 @@ class PlotFunctionsTest(unittest.TestCase):
                                          DataE=[1, 2, 3, 4],
                                          NSpec=2,
                                          Distribution=True,
+                                         YUnitLabel="Counts per $\\AA$",
                                          UnitX='Wavelength',
                                          VerticalAxisUnit='DeltaE',
                                          VerticalAxisValues=[4, 6, 8],
                                          OutputWorkspace='ws2d_histo')
+        cls.ws2d_histo_non_dist = CreateWorkspace(DataX=[10, 20, 30, 10, 20, 30],
+                                                  DataY=[2, 3, 4, 5],
+                                                  DataE=[1, 2, 3, 4],
+                                                  NSpec=2,
+                                                  Distribution=False,
+                                                  YUnitLabel='Counts',
+                                                  UnitX='Wavelength',
+                                                  OutputWorkspace='ws2d_histo_non_dist')
         cls.ws2d_histo_rag = CreateWorkspace(DataX=[1, 2, 3, 4, 5, 2, 4, 6, 8, 10],
                                              DataY=[2] * 8,
                                              NSpec=2,
@@ -77,6 +87,7 @@ class PlotFunctionsTest(unittest.TestCase):
     def tearDownClass(cls):
         config['graph1d.autodistribution'] = cls.g1da
         DeleteWorkspace('ws2d_histo')
+        DeleteWorkspace('ws2d_histo_non_dist')
         DeleteWorkspace('ws_MD_2d')
         DeleteWorkspace('ws_MD_1d')
         DeleteWorkspace('ws2d_point_uneven')
@@ -129,8 +140,8 @@ class PlotFunctionsTest(unittest.TestCase):
         funcs.update_colorplot_datalimits(ax, mesh)
         self.assertAlmostEqual(10.0, ax.get_xlim()[0])
         self.assertAlmostEqual(30.0, ax.get_xlim()[1])
-        #self.assertAlmostEqual(4.0, ax.get_ylim()[0])
-        #self.assertAlmostEqual(8.0, ax.get_ylim()[1])
+        # self.assertAlmostEqual(4.0, ax.get_ylim()[0])
+        # self.assertAlmostEqual(8.0, ax.get_ylim()[1])
 
     def test_update_colorplot_datalimits_for_pcolormesh(self):
         self._do_update_colorplot_datalimits(funcs.pcolormesh)
@@ -169,6 +180,34 @@ class PlotFunctionsTest(unittest.TestCase):
         funcs.plot(ax, self.ws_MD_2d, slicepoint=(0, 0, None))
         self.assertRaises(AssertionError, funcs.plot, ax, self.ws_MD_2d, slicepoint=(0, None, None))
         self.assertRaises(AssertionError, funcs.plot, ax, self.ws_MD_2d)
+
+    def test_1d_y_axes_label_auto_distribution_on(self):
+        fig, ax = plt.subplots()
+        funcs.plot(ax, self.ws2d_histo_non_dist, 'rs', specNum=1)
+        self.assertEqual(ax.get_ylabel(), "Counts ($\\AA$)$^{-1}$")
+
+    def test_1d_y_axes_label_distribution_workspace_auto_distribution_on(self):
+        fig, ax = plt.subplots()
+        funcs.plot(ax, self.ws2d_histo, 'rs', specNum=1)
+        self.assertEqual(ax.get_ylabel(), "Counts ($\\AA$)$^{-1}$")
+
+    def test_1d_y_axes_label_auto_distribution_off(self):
+        try:
+            config['graph1d.autodistribution'] = 'Off'
+            fig, ax = plt.subplots()
+            funcs.plot(ax, self.ws2d_histo_non_dist, 'rs', specNum=1)
+            self.assertEqual(ax.get_ylabel(), "Counts")
+        finally:
+            config['graph1d.autodistribution'] = 'On'
+
+    def test_1d_y_axes_label_distribution_workspace_auto_distribution_off(self):
+        try:
+            config['graph1d.autodistribution'] = 'Off'
+            fig, ax = plt.subplots()
+            funcs.plot(ax, self.ws2d_histo, 'rs', specNum=1)
+            self.assertEqual(ax.get_ylabel(), "Counts ($\\AA$)$^{-1}$")
+        finally:
+            config['graph1d.autodistribution'] = 'On'
 
 
 if __name__ == '__main__':
