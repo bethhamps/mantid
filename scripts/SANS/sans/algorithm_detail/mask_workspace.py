@@ -7,12 +7,13 @@
 from __future__ import (absolute_import, division, print_function)
 from six import with_metaclass
 from abc import (ABCMeta, abstractmethod)
+
+from sans.algorithm_detail.mask_functions import (SpectraBlock)
+from sans.algorithm_detail.xml_shapes import (add_cylinder, add_outside_cylinder, create_phi_mask, create_line_mask)
 from sans.common.constants import EMPTY_NAME
 from sans.common.enums import (SANSInstrument, DetectorType)
 from sans.common.general_functions import create_unmanaged_algorithm
 from sans.common.file_information import (find_full_file_path, get_instrument_paths_for_sans_file)
-from sans.algorithm_detail.xml_shapes import (add_cylinder, add_outside_cylinder, create_phi_mask, create_line_mask)
-from sans.algorithm_detail.mask_functions import (SpectraBlock)
 
 
 # ------------------------------------------------------------------
@@ -342,7 +343,8 @@ class Masker(with_metaclass(ABCMeta, object)):
         super(Masker, self).__init__()
 
     @abstractmethod
-    def mask_workspace(self, mask_info, workspace_to_mask, detector_type, progress):
+    def mask_workspace(self, mask_info, workspace_to_mask, detector_type, progress,
+                       include_bin_masking=False):
         pass
 
 
@@ -362,7 +364,8 @@ class MaskerISIS(Masker):
         self._instrument = instrument
         self._detector_names = detector_names
 
-    def mask_workspace(self, mask_info, workspace_to_mask, detector_type, progress):
+    def mask_workspace(self, mask_info, workspace_to_mask, detector_type, progress,
+                       include_bin_masking=True):
         """
         Performs the different types of masks that are currently available for ISIS reductions.
 
@@ -370,11 +373,13 @@ class MaskerISIS(Masker):
         :param workspace_to_mask: the workspace to mask.
         :param detector_type: the detector type which is currently used , i.e. HAB or LAB
         :param progress: a Progress object
+        :param include_bin_masking: optional bool. If true, also perform bin masking
         :return: a masked workspace.
         """
-        # Perform bin masking
-        progress.report("Performing bin masking.")
-        workspace_to_mask = mask_bins(mask_info, workspace_to_mask, detector_type)
+        if include_bin_masking:
+            # Perform bin masking
+            progress.report("Performing bin masking.")
+            workspace_to_mask = mask_bins(mask_info, workspace_to_mask, detector_type)
 
         # Perform cylinder masking
         progress.report("Performing cylinder masking.")

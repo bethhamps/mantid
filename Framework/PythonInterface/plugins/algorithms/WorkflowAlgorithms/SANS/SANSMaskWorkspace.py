@@ -43,6 +43,8 @@ class SANSMaskWorkspace(DistributedDataProcessorAlgorithm):
         self.declareProperty("Component", DetectorType.to_string(DetectorType.LAB), validator=allowed_detectors,
                              direction=Direction.Input,
                              doc="The component of the instrument which is to be masked.")
+        self.declareProperty("includeBinMasking", True, direction=Direction.Input,
+                             doc="Whether or not to mask bins.")
 
     def PyExec(self):
         # Read the state
@@ -56,10 +58,12 @@ class SANSMaskWorkspace(DistributedDataProcessorAlgorithm):
         masker = create_masker(state, component)
 
         # Perform the masking
-        number_of_masking_options = 7
+        include_bin_masking = self.getProperty("includeBinMasking").value
+        number_of_masking_options = 7 if include_bin_masking else 6
         progress = Progress(self, start=0.0, end=1.0, nreports=number_of_masking_options)
         mask_info = state.mask
-        workspace = masker.mask_workspace(mask_info, workspace, component, progress)
+        workspace = masker.mask_workspace(mask_info, workspace, component, progress,
+                                          include_bin_masking=include_bin_masking)
 
         append_to_sans_file_tag(workspace, "_masked")
         self.setProperty("Workspace", workspace)
