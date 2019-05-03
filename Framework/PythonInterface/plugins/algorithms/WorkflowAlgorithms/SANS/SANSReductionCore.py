@@ -219,8 +219,9 @@ class SANSReductionCore(DistributedDataProcessorAlgorithm):
             # Masked bins are in time. We need to convert this to wavelength
             # and scale
             workspace = self._mask_bins(state, workspace, component_as_string)
+
         # ------------------------------------------------------------
-        # 10. Convert to Q
+        # 10/11. Convert to Q
         # -----------------------------------------------------------
         progress.report("Converting to q ...")
         workspace, sum_of_counts, sum_of_norms = self._convert_to_q(state_serialized,
@@ -382,10 +383,7 @@ class SANSReductionCore(DistributedDataProcessorAlgorithm):
             mask_info.detectors[component].bin_mask_start = bin_mask_start
             mask_info.detectors[component].bin_mask_stop = bin_mask_stop
 
-        # TODO scale the bins
-
-        component = DetectorType.from_string(component)
-        return mask_bins(mask_info, workspace, component)
+        return mask_bins(mask_info, workspace, DetectorType.from_string(component))
 
     def _convert_mask_values(self, mask_start, mask_stop, instrument, state_serialized):
         """

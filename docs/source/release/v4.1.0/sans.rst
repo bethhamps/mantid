@@ -32,3 +32,4 @@ Bug Fixes
 - Exporting table as a batch file is fixed for Mantid Workbench.
 - The warning message raised when you have supplied a transmission run without a direct run has been suppressed when data is still being input. The warning will still be raised if you load or process the data.
 - The algorithm :ref:`Load <algm-Load>` can now load NXcanSAS files.
+- The differences between non-compatibility and compatibility modes has been minimised. Compatibility mode can now be turned off in the settings tab. When off, workspaces stay as EventWorkspaces until the penultimate stage of :ref:`SANSReductionCore <algm-SANSReductionCore>`. Bin masking is not performed until workspace has been converted to a histogram.
