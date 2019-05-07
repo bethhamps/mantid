@@ -12,6 +12,7 @@
 #include "MantidGeometry/Objects/Track.h"
 #include "MantidGeometry/Rasterize.h"
 #include "MantidKernel/BoundedValidator.h"
+#include "MantidKernel/ArrayProperty.h"
 
 namespace Mantid {
 namespace Algorithms {
@@ -27,6 +28,15 @@ CylinderAbsorption::CylinderAbsorption()
     : AbsorptionCorrection(), m_cylHeight(0.0), m_cylRadius(0.0),
       m_numSlices(0), m_numAnnuli(0), m_useSampleShape(false) {}
 
+std::map<std::string, std::string> CylinderAbsorption::validateInputs(){
+  std::map<std::string, std::string> issues;
+  std::vector<double> prop = getProperty("CylinderAxis");
+  if(prop.size() != 3){
+    issues["CylinderAxis"]= "CylinderAxis must be a list with 3 elements.";
+  }
+  return issues;
+}
+
 void CylinderAbsorption::defineProperties() {
   auto mustBePositive = boost::make_shared<BoundedValidator<double>>();
   mustBePositive->setLower(0.0);
@@ -34,6 +44,10 @@ void CylinderAbsorption::defineProperties() {
                   "The height of the cylindrical sample in centimetres");
   declareProperty("CylinderSampleRadius", EMPTY_DBL(), mustBePositive,
                   "The radius of the cylindrical sample in centimetres");
+  declareProperty(
+      make_unique<ArrayProperty<double>>(
+          "CylinderAxis","0.0, 1.0, 0.0"),
+      "A 3D vector specifying the cylindrical sample's orientation");
 
   auto positiveInt = boost::make_shared<BoundedValidator<int>>();
   positiveInt->setLower(1);
@@ -75,6 +89,7 @@ void CylinderAbsorption::getShapeFromSample(
 void CylinderAbsorption::retrieveProperties() {
   m_numSlices = getProperty("NumberOfSlices");
   m_numAnnuli = getProperty("NumberOfAnnuli");
+  m_cylAxis = getProperty("CylinderAxis");
 
   bool userSuppliedHeight = false;
   bool userSuppliedRadius = false;
@@ -138,7 +153,8 @@ std::string CylinderAbsorption::sampleXML() {
   xmlShapeStream << "<cylinder id=\"detector-shape\"> "
                  << "<centre-of-bottom-base x=\"" << samplePos.X() << "\" y=\""
                  << cylinderBase << "\" z=\"" << samplePos.Z() << "\" /> "
-                 << "<axis x=\"0\" y=\"1\" z=\"0\" /> "
+                 << "<axis x=\"" << m_cylAxis[0] << "\" y=\""
+                 << m_cylAxis[1] << "\" z=\"" << m_cylAxis[2] << "\" /> "
                  << "<radius val=\"" << m_cylRadius << "\" /> "
                  << "<height val=\"" << m_cylHeight << "\" /> "
                  << "</cylinder>";
