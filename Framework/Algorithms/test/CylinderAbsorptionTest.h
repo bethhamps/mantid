@@ -98,6 +98,10 @@ public:
     geometry->declareProperty(Mantid::Kernel::make_unique<FloatArrayProperty>(
                                   "Center", std::move(center)),
                               "");
+    std::vector<double> cylinderAxis{0.0, 1.0, 0.0};
+    geometry->declareProperty(Mantid::Kernel::make_unique<FloatArrayProperty>(
+                                  "CylinderAxis", cylinderAxis),
+                              "");
 
     // set the sample information
     Mantid::DataHandling::SetSample setsample;
@@ -159,6 +163,10 @@ public:
     std::vector<double> center{0, 0, 0};
     geometry->declareProperty(Mantid::Kernel::make_unique<FloatArrayProperty>(
                                   "Center", std::move(center)),
+                              "");
+    std::vector<double> cylinderAxis{0.0, 1.0, 0.0};
+    geometry->declareProperty(Mantid::Kernel::make_unique<FloatArrayProperty>(
+                                  "CylinderAxis", cylinderAxis),
                               "");
 
     // set the sample information
